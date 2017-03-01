@@ -9,8 +9,7 @@
 #define CONSUMER_COUNT 1
 #define ARRAY_SIZE 20
 
-typedef struct
-{
+typedef struct {
     int a[ARRAY_SIZE];
     int b[ARRAY_SIZE];
     int c[ARRAY_SIZE];
@@ -22,10 +21,11 @@ typedef struct
 sem_var_t shared_variables;
 
 
-void *Producer(void *arg)
-{
-    for (int i = 0; i < 20; i++){
+void *Producer(void *arg) {
+    int index = (int) arg;
+    for (int i = 0; i < 20; i++) {
       sem_wait(&shared_variables.count);
+      printf("Producer %d has written c[%d] and updated global sum.", index, shared_variables.array_index);
       shared_variables.c[shared_variables.array_index] = shared_variables.a[shared_variables.array_index] + shared_variables.b[shared_variables.array_index];
       shared_variables.array_index += 1;
       printf("Producer created! %d\n", &shared_variables.count);
@@ -37,25 +37,22 @@ void *Producer(void *arg)
     return NULL;
 }
 
-void *Consumer(void *arg)
-{
-    for (int i = 0; i < 20; i++){
+void *Consumer(void *arg) {
+    int index = (int) arg;
+    for (int i = 0; i < 20; i++) {
       sem_wait(&shared_variables.count);
-
+      printf("Consumer %d has read c[%d].", index, shared_variables.array_index);
       printf("Consumer created! %d\n", shared_variables.c[i]);
 
     }
     return NULL;
 }
 
-int main()
-{
+int main() {
     pthread_t idP, idC;
     int index;
     sem_init(&shared_variables.count, 0, 0);
-    // shared_variables.a = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19};
-    // shared_variables.b = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20};
-    // shared_variables.c = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
     for(int i = 0; i < 20; i++) {
       shared_variables.a[i] = i;
     }
@@ -68,14 +65,12 @@ int main()
     shared_variables.array_index = 0;
     shared_variables.global_sum = 0;
 
-    for (index = 0; index < PRODUCER_COUNT; index++)
-    {
+    for (index = 0; index < PRODUCER_COUNT; index++) {
         /* Create a new producer */
         pthread_create(&idP, NULL, Producer, (void*)index);
     }
     /*create a new Consumer*/
-    for(index=0; index<CONSUMER_COUNT; index++)
-    {
+    for(index=0; index<CONSUMER_COUNT; index++) {
         pthread_create(&idC, NULL, Consumer, (void*)index);
     }
 
