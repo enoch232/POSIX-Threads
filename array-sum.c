@@ -24,21 +24,27 @@ sem_var_t shared_variables;
 
 void *Producer(void *arg)
 {
-    sem_wait(&shared_variables.count);
-    shared_variables.c[shared_variables.array_index] = shared_variables.a[shared_variables.array_index] + shared_variables.b[shared_variables.array_index];
-    shared_variables.array_index += 1;
-    sem_post(&shared_variables.count);
-    // sleep(1);
-    printf("Producer created! %d\n", &shared_variables.count);
+    for (int i = 0; i < 20; i++){
+      sem_wait(&shared_variables.count);
+      shared_variables.c[shared_variables.array_index] = shared_variables.a[shared_variables.array_index] + shared_variables.b[shared_variables.array_index];
+      shared_variables.array_index += 1;
+      printf("Producer created! %d\n", &shared_variables.count);
+      sem_post(&shared_variables.count);
+      // sleep(1);
+
+
+    }
     return NULL;
 }
 
 void *Consumer(void *arg)
 {
-    sleep(1);
-    sem_wait(&shared_variables.count);
+    for (int i = 0; i < 20; i++){
+      sem_wait(&shared_variables.count);
 
-    printf("Consumer created! %d\n", shared_variables.c[0]);
+      printf("Consumer created! %d\n", shared_variables.c[i]);
+
+    }
     return NULL;
 }
 
