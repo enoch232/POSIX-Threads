@@ -24,7 +24,7 @@ void *Producer(void *arg) { // Producer
     int index = (int) arg; // store the producer's identity.
 
     while (shared_variables.array_index < ARRAY_SIZE && shared_variables.global_sum < 200){ // while global sum is less than 200, and array index is not greater than the array size
-      while(shared_variables.counter >= 1); // stall if there is one or more producer exists already. This is to ensure number of producer is only max 2 above number of consumer
+      while(shared_variables.counter >= 1 && shared_variables.global_sum < 200); // stall if there is one or more producer exists already. This is to ensure number of producer is only max 2 above number of consumer
 
       pthread_mutex_lock(&shared_variables.mutex); // lock using the mutex, so that no two producers are working on the same array_index
       shared_variables.c[shared_variables.array_index] = shared_variables.a[shared_variables.array_index] + shared_variables.b[shared_variables.array_index]; //add elements of two different arrays.
@@ -53,8 +53,8 @@ void *Consumer(void *arg) { // Consumer
       if (shared_variables.global_sum >= 200){ // if the global_sum is above 200,
         printf("Consumer %d has read previously produced c[%d]= %d.\n", index, i+1, shared_variables.c[i+1]); // display previously produced.
         printf("Consumer %d has read global sum = %d\n\n", index, shared_variables.global_sum); // display new global sum
-        printf("Consumer %d has read previously produced c[%d]= %d.\n", index, i+2, shared_variables.c[i+2]); // display another previously produced.
-        printf("Consumer %d has read global sum = %d\n\n", index, shared_variables.global_sum); // display new global sum
+        //printf("Consumer %d has read previously produced c[%d]= %d.\n", index, i+2, shared_variables.c[i+2]); // display another previously produced.
+        //printf("Consumer %d has read global sum = %d\n\n", index, shared_variables.global_sum); // display new global sum
         break; // break out of the loop so that it doesnt stall or anything.
       }
     }
