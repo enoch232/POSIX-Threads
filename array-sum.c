@@ -16,30 +16,33 @@ typedef struct {
     int array_index;
     int global_sum;
     int counter;
-    sem_t count;           /* keep track of the number of full spots */
     pthread_mutex_t mutex;          /* enforce mutual exclusion to shared data */
 } sem_var_t;
 
 sem_var_t shared_variables;
+// sem_t *s1;
+
 int value = 0;
 void *Producer(void *arg) {
     int index = (int) arg;
 
     while (shared_variables.array_index < 20){
-      sem_getvalue(&shared_variables.count, &value);
-      if (value > 2){
-        sleep(1);
-      }
-      sem_wait(&shared_variables.count);
+      while(shared_variables.counter >= 1);
+
       pthread_mutex_lock(&shared_variables.mutex);
       shared_variables.c[shared_variables.array_index] = shared_variables.a[shared_variables.array_index] + shared_variables.b[shared_variables.array_index];
+      shared_variables.global_sum += shared_variables.c[shared_variables.array_index];
       printf("Producer %d has written c[%d] and updated global sum.\n", index, shared_variables.array_index);
-      printf("Number of items available for consumer: %d\n", value);
+
       // sleep(1);
       shared_variables.array_index += 1;
+      shared_variables.counter += 1;
+      printf("Number of items available for consumer: %d\n\n", shared_variables.counter);
       pthread_mutex_unlock(&shared_variables.mutex);
       // shared_variables.counter ++;
-      sem_post(&shared_variables.count);
+
+      // sem_post(&shared_variables.count);
+
       sleep(1);
     }
 
@@ -49,10 +52,12 @@ void *Producer(void *arg) {
 void *Consumer(void *arg) {
     int index = (int) arg;
     for (int i = 0; i < 20; i++) {
-      sem_wait(&shared_variables.count);
+      // sem_wait(&shared_variables.count);
+      while(shared_variables.counter <= 0);
       pthread_mutex_lock(&shared_variables.mutex);
       printf("Consumer %d has read c[%d]= %d.\n", index, i, shared_variables.c[i]);
-      // shared_variables.counter --;
+      printf("Consumer %d has read global sum = %d\n\n", index, shared_variables.global_sum);
+      shared_variables.counter -= 1;
       pthread_mutex_unlock(&shared_variables.mutex);
       sleep(1);
     }
@@ -62,7 +67,6 @@ void *Consumer(void *arg) {
 int main() {
     pthread_t idP, idC;
     int index;
-    sem_init(&shared_variables.count, 0, 0);
     for(int i = 0; i < 20; i++) {
       shared_variables.a[i] = i;
     }
@@ -74,7 +78,6 @@ int main() {
     }
     shared_variables.array_index = 0;
     shared_variables.global_sum = 0;
-    shared_variables.count = 0;
     pthread_mutex_init(&shared_variables.mutex, NULL);
     for (index = 0; index < PRODUCER_COUNT; index++) {
         /* Create a new producer */
